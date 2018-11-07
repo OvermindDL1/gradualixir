@@ -1,5 +1,5 @@
 %{
   "dialyxir": {:hex, :dialyxir, "1.0.0-rc.4", "71b42f5ee1b7628f3e3a6565f4617dfb02d127a0499ab3e72750455e986df001", [:mix], [{:erlex, "~> 0.1", [hex: :erlex, repo: "hexpm", optional: false]}], "hexpm"},
-  "erlex": {:hex, :erlex, "0.1.5", "fca8568751216266b343e182c9f494654e93c8adce3a0189c86ea45b632e8c55", [:mix], [], "hexpm"},
+  "erlex": {:hex, :erlex, "0.1.6", "c01c889363168d3fdd23f4211647d8a34c0f9a21ec726762312e08e083f3d47e", [:mix], [], "hexpm"},
   "gradualizer": {:git, "https://github.com/josefs/Gradualizer.git", "50185b4e15ca7caa1ffada9be8391021c74bedb0", [ref: "master"]},
 }
