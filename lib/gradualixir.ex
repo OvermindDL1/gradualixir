@@ -41,12 +41,14 @@ defmodule Gradualixir do
         end
       rescue
         e in FunctionClauseError ->
+          {e, stack} = Exception.blame(:error, e, __STACKTRACE__)
+
           IO.puts("""
 
           *********************************
           Report this error to Gradualizer:
 
-          #{Exception.format(:error, e, __STACKTRACE__)}
+          #{Exception.format(:error, e, stack)}
 
           """)
 
