@@ -14,7 +14,7 @@ defmodule Mix.Tasks.Gradualizer do
 
   @spec run(OptionParser.argv()) :: :ok | :error
   def run(args) do
-    {opts, gargs, _} = OptionParser.parse(args, strict: @command_options)
+    {opts, gargs, _ignored_flags} = OptionParser.parse(args, strict: @command_options)
     original_shell = Mix.shell()
     if opts[:quiet], do: Mix.shell(Mix.Shell.Quiet)
     opts = Keyword.delete(opts, :quiet)

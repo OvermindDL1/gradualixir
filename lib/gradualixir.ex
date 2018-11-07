@@ -31,12 +31,26 @@ defmodule Gradualixir do
     files
     |> Enum.map(&to_charlist/1)
     |> Enum.reduce_while(:ok, fn file, result ->
-      file
-      |> to_charlist()
-      |> :gradualizer.type_check_file(print_file: true)
-      |> case do
-        :ok -> {:cont, if(result == :ok, do: :ok, else: result)}
-        :nok -> {:cont, :error}
+      try do
+        file
+        |> to_charlist()
+        |> :gradualizer.type_check_file(print_file: true)
+        |> case do
+          :ok -> {:cont, if(result == :ok, do: :ok, else: result)}
+          :nok -> {:cont, :error}
+        end
+      rescue
+        e in FunctionClauseError ->
+          IO.puts("""
+
+          *********************************
+          Report this error to Gradualizer:
+
+          #{Exception.format(:error, e, __STACKTRACE__)}
+
+          """)
+
+          {:cont, :error}
       end
     end)
   end
