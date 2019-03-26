@@ -21,7 +21,7 @@ defmodule Gradualixir do
       :ok
 
   """
-  @spec gradualize(binary() | list(charlist()) | list(binary())) :: :ok
+  @spec gradualize(binary() | list(charlist()) | list(binary())) :: :ok | :error | list(error :: any())
   def gradualize(files, opts \\ [])
 
   def gradualize([_ | _] = files, opts) do
@@ -29,31 +29,11 @@ defmodule Gradualixir do
     if(preload, do: :gradualizer_db.import_beam_files(get_beam_files(opts)))
 
     files
-    |> Enum.map(&to_charlist/1)
-    |> Enum.reduce_while(:ok, fn file, result ->
-      try do
-        file
-        |> to_charlist()
-        |> :gradualizer.type_check_file(print_file: true)
-        |> case do
-          :ok -> {:cont, if(result == :ok, do: :ok, else: result)}
-          :nok -> {:cont, :error}
-        end
-      rescue
-        e in FunctionClauseError ->
-          {e, stack} = Exception.blame(:error, e, __STACKTRACE__)
-
-          IO.puts("""
-
-          *********************************
-          Report this error to Gradualizer:
-
-          #{Exception.format(:error, e, stack)}
-
-          """)
-
-          {:cont, :error}
-      end
+    |> Enum.reduce(:ok, fn file, result ->
+      file
+      |> to_charlist()
+      |> safe_type_check_file(opts)
+      |> merge_results(result)
     end)
   end
 
@@ -80,6 +60,40 @@ defmodule Gradualixir do
     case opts[:ebin_root] do
       nil -> :code.get_path()
       paths -> List.wrap(paths)
+    end
+  end
+
+  defp safe_type_check_file(file, opts) do
+    try do
+      :gradualizer.type_check_file(file, [{:print_file, true} | opts])
+    rescue
+      e in _ ->
+        {e, stack} = Exception.blame(:error, e, __STACKTRACE__)
+
+        IO.puts("""
+
+        *********************************
+        Report this error to Gradualizer:
+
+        #{Exception.format(:error, e, stack)}
+
+        """)
+
+        :error
+    else
+      :ok -> :ok
+      :nok -> :error
+      [] -> :ok
+      [_ | _] = errors -> {:error, errors}
+    end
+  end
+
+  defp merge_results(result, acc) do
+    case result do
+      :ok -> acc
+      :error -> :error
+      {:error, errors} when acc == :ok -> errors
+      {:error, errors} -> acc ++ errors
     end
   end
 end
