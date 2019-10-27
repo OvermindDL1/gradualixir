@@ -4,7 +4,7 @@ defmodule Gradualixir do
   """
 
   @doc """
-  Hello world.
+  Examples speak for themselves
 
   ## Examples
 
@@ -14,10 +14,10 @@ defmodule Gradualixir do
       iex> Gradualixir.gradualize(beamfile)
       :ok
 
-  ### Gradualizing many beam files
+  ### Gradualizing many beam files, with format option
 
       iex> beamfiles = Path.wildcard("_build/test/lib/gradualixir/ebin/*.beam")
-      iex> Gradualixir.gradualize(beamfiles)
+      iex> Gradualixir.gradualize(beamfiles, fmt_location: :brief)
       :ok
 
   """
