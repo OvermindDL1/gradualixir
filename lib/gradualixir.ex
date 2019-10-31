@@ -3,6 +3,8 @@ defmodule Gradualixir do
   Documentation for Gradualixir.
   """
 
+  @def_opts [print_file: true, specs_override: 'priv/prelude']
+
   @doc """
   Examples speak for themselves
 
@@ -21,12 +23,14 @@ defmodule Gradualixir do
       :ok
 
   """
-  @spec gradualize(binary() | list(charlist()) | list(binary())) :: :ok | :error | list(error :: any())
+  @spec gradualize(binary() | list(charlist()) | list(binary())) ::
+          :ok | :error | list(error :: any())
   def gradualize(files, opts \\ [])
 
   def gradualize([_ | _] = files, opts) do
-    {preload, _opts} = Keyword.pop(opts, :preload, false)
-    if(preload, do: :gradualizer_db.import_beam_files(get_beam_files(opts)))
+    if opts[:preload] do
+      :gradualizer_db.import_beam_files(get_beam_files(opts))
+    end
 
     files
     |> Enum.reduce(:ok, fn file, result ->
@@ -64,36 +68,30 @@ defmodule Gradualixir do
   end
 
   defp safe_type_check_file(file, opts) do
-    try do
-      :gradualizer.type_check_file(file, [{:print_file, true}, {:specs_override, 'priv/prelude'} | opts])
-    rescue
-      e in _ ->
-        {e, stack} = Exception.blame(:error, e, __STACKTRACE__)
+    :gradualizer.type_check_file(file, @def_opts ++ opts)
+  else
+    :ok -> :ok
+    :nok -> :error
+    [] -> :ok
+    [_ | _] = errors -> {:error, errors}
+  rescue
+    e in _ ->
+      {e, stack} = Exception.blame(:error, e, __STACKTRACE__)
 
-        IO.puts("""
+      IO.puts("""
 
-        *********************************
-        Report this error to Gradualizer:
+      *********************************
+      Report this error to Gradualizer:
 
-        #{Exception.format(:error, e, stack)}
+      #{Exception.format(:error, e, stack)}
 
-        """)
+      """)
 
-        :error
-    else
-      :ok -> :ok
-      :nok -> :error
-      [] -> :ok
-      [_ | _] = errors -> {:error, errors}
-    end
+      :error
   end
 
-  defp merge_results(result, acc) do
-    case result do
-      :ok -> acc
-      :error -> :error
-      {:error, errors} when acc == :ok -> errors
-      {:error, errors} -> acc ++ errors
-    end
-  end
+  defp merge_results(:ok, acc), do: acc
+  defp merge_results(:error, _acc), do: :error
+  defp merge_results({:error, errors}, :ok), do: errors
+  defp merge_results({:error, errors}, acc), do: acc ++ errors
 end
